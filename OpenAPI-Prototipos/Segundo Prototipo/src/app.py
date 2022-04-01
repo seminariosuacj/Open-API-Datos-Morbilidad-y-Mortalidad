@@ -1,12 +1,15 @@
-#required packages
-from flask import Flask, Response, request
-import json
-import pymongo
+from flask import Flask, jsonify, request, Response
+import pymongo, json
+from bson import ObjectId, json_util
+
 app = Flask (__name__)
 
-#auto debug on save
-if __name__ == "__main__":
-    app.run(debug=True)
+#coder for ObjectID Type
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
 
 #connection to Database
 try:
@@ -14,11 +17,186 @@ try:
         host="localhost", 
         port=27017, 
         serverSelectionTimeoutMS = 1000
-    )
+        )
     db = mongo.datos_abiertos_2012_2020
     mongo.server_info()#trigger exception if not able to connecto to db
 except:
     print("ERROR - Cannot connecto to DataBase")
+
+#main GET endpoint
+@app.route('/main', methods=['GET'])
+def main():
+    try:
+        dead = db.mortalidad.find_one()
+        firstDead = json.dumps(dead, cls=JSONEncoder)
+        return firstDead
+    except Exception as ex:
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /main URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#"/mortality-state" GET endpoint
+@app.route('/mortality-state', methods=['GET'])
+def get_mortality_state():
+    try:
+        year = request.args.get("state", default=0, type=int)
+        data = list(db.mortalidad.find({"ent_ocurr" : year}))
+        print(str(len(data)))
+        data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
+        return jsonify()
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /mortality-state URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#"/mortality-state-year" GET endpoint
+@app.route('/mortality-state-year', methods=['GET'])
+def get_mortality_state_year():
+    try:
+        state = request.args.get("state", default=0, type=int)
+        year = request.args.get("year", default=0, type=int)
+        data = list(db.mortalidad.find({"ent_ocurr" : state, "anio_ocur" : year}))
+        data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
+        return jsonify()
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /mortality-state-year URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#"/mortality-scholarship-year" GET endpoint
+@app.route('/mortality-scholarship-year', methods=['GET'])
+def get_scholarship_year():
+    try:
+        scholarship = request.args.get("scholarship", default=0, type=int)
+        year = request.args.get("year", default=0, type=int)
+        data = list(db.mortalidad.find({"anio_ocur" : year, "escolarida" : scholarship}))
+        data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
+        return jsonify()
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /mortality-scholarship-year URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#"/mortality-scholarship-state" GET endpoint
+@app.route('/mortality-scholarship-state', methods=['GET'])
+def get_scholarship_state():
+    try:
+        scholarship = request.args.get("scholarship", default=0, type=int)
+        state = request.args.get("state", default=0, type=int)
+        data = list(db.mortalidad.find({"ent_ocurr" : state, "escolarida" : scholarship}))
+        data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
+        return jsonify()
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /mortality-scholarship-state URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#"/mortality-sex-year" GET endpoint
+@app.route('/mortality-sex-year', methods=['GET'])
+def get_sex_year():
+    try:
+        sex = request.args.get("sex", default=0, type=int)
+        year = request.args.get("year", default=0, type=int)
+        data = list(db.mortalidad.find({"sexo" : sex, "anio_ocur" : year}))
+        data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
+        return jsonify()
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /mortality-sex-year URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#"/mortality-sex-state" GET endpoint
+@app.route('/mortality-sex-state', methods=['GET'])
+def get_sex_state():
+    try:
+        sex = request.args.get("sex", default=0, type=int)
+        state = request.args.get("state", default=0, type=int)
+        data = list(db.mortalidad.find({"sexo" : sex, "ent_ocurr" : state}))
+        data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
+        return jsonify()
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /mortality-sex-state URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#"/mortality-medical-attention" GET endpoint
+@app.route('/mortality-medical-attention', methods=['GET'])
+def get_medical_attention():
+    try:
+        medical = request.args.get("medical", default=0, type=int)
+        print(medical)
+        year = request.args.get("year", default=0, type=int)
+        print(year)
+        data = list(db.mortalidad.find({"asist_medi" : medical, "anio_ocur" : year}))
+        print(len(data))
+        data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
+        return jsonify()
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "impossible to access /mortality-medical-attention URI" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+#auto debug on save
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+""""
 
 #"/top-morbidity" GET endpoint
 @app.route('/top-enfermedades', methods=['GET'])
@@ -48,89 +226,6 @@ def get_top_enfermedades():
             mimetype="application/json"
         )
 
-#"/state-casualties" GET endpoint
-@app.route('/state-casualties', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json para las muertes de un determinado estado del 2012 - 2020"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-#"/mortality-state-year" GET endpoint
-@app.route('/mortality-state-year', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json para las muertes de un determinado estado por año"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-#"/mortality-scholarship" GET endpoint
-@app.route('/mortality-scholarship', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json para las muertes por escolaridad por año"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-#"/mortality-scholarship-state" GET endpoint
-@app.route('/mortality-scholarship-state', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json para las muertes por escolaridad por estado 2020-2012"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-#"/mortality-sex" GET endpoint
-@app.route('/mortality-sex', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json para las muertes por sexo 2020-2012"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-#"/mortality-sex-year" GET endpoint
-@app.route('/mortality-sex-year', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json para las muertes por sexo de un determinado año"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
 
 #"/top-comorbidity" GET endpoint
 @app.route('/top-comorbidity', methods=['GET'])
@@ -146,19 +241,6 @@ def get_top_enfermedades():
             mimetype="application/json"
         )
 
-#"/mortality-medical-attention" GET endpoint
-@app.route('/mortality-medical-attention', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json Mortalidad y atención médica"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
 
 #"/mortality-top-states" GET endpoint
 @app.route('/mortality-top-states', methods=['GET'])
@@ -187,3 +269,4 @@ def get_top_enfermedades():
             status=500,
             mimetype="application/json"
         )
+        """
