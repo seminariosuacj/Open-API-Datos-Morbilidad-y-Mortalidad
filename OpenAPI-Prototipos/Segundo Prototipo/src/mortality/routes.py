@@ -1,15 +1,6 @@
-from flask import Flask, jsonify, request, Response
+from flask import request, Response, Blueprint
 import pymongo, json
 from bson import ObjectId, json_util
-
-app = Flask (__name__)
-
-#coder for ObjectID Type
-class JSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
 
 #connection to Database
 try:
@@ -19,12 +10,17 @@ try:
         serverSelectionTimeoutMS = 1000
         )
     db = mongo.datos_abiertos_2012_2020
-    mongo.server_info()#trigger exception if not able to connecto to db
+    mongo.server_info()#trigger exception if not able to connect to db
 except:
     print("ERROR - Cannot connect to DataBase")
 
+#defining the  Blueprint
+mortalidad = Blueprint("mortalidad", __name__, url_prefix='/mortality/v.1')
+
+#region API Endpoints
+
 #main GET endpoint
-@app.route('/main', methods=['GET'])
+@mortalidad.route('/main', methods=['GET'])
 def main():
     try:
         dead = list(db.mortalidad.find({"anio_ocur" : 2012, "escolarida" : 2, "ent_ocurr" : 10}))
@@ -42,10 +38,12 @@ def main():
         )
 
 #"/mortality-state" GET endpoint
-@app.route('/mortality-state', methods=['GET'])
+@mortalidad.route('/mortality-state', methods=['GET'])
 def get_mortality_state():
     try:
+        #catching values
         state = request.args.get("state", default=0, type=int)
+
         data = list(db.mortalidad.find({"ent_ocurr" : state}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
@@ -62,11 +60,13 @@ def get_mortality_state():
         )
 
 #"/mortality-state-year" GET endpoint
-@app.route('/mortality-state-year', methods=['GET'])
+@mortalidad.route('/mortality-state-year', methods=['GET'])
 def get_mortality_state_year():
     try:
+        #catching values
         state = request.args.get("state", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
+
         data = list(db.mortalidad.find({"ent_ocurr" : state, "anio_ocur" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
@@ -83,11 +83,13 @@ def get_mortality_state_year():
         )
 
 #"/mortality-scholarship-year" GET endpoint
-@app.route('/mortality-scholarship-year', methods=['GET'])
+@mortalidad.route('/mortality-scholarship-year', methods=['GET'])
 def get_scholarship_year():
     try:
+        #catching values
         scholarship = request.args.get("scholarship", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
+
         data = list(db.mortalidad.find({"anio_ocur" : year, "escolarida" : scholarship}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
@@ -104,11 +106,13 @@ def get_scholarship_year():
         )
 
 #"/mortality-scholarship-state" GET endpoint
-@app.route('/mortality-scholarship-state', methods=['GET'])
+@mortalidad.route('/mortality-scholarship-state', methods=['GET'])
 def get_scholarship_state():
     try:
+        #catching values
         scholarship = request.args.get("scholarship", default=0, type=int)
         state = request.args.get("state", default=0, type=int)
+
         data = list(db.mortalidad.find({"ent_ocurr" : state, "escolarida" : scholarship}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
@@ -125,11 +129,13 @@ def get_scholarship_state():
         )
 
 #"/mortality-sex-year" GET endpoint
-@app.route('/mortality-sex-year', methods=['GET'])
+@mortalidad.route('/mortality-sex-year', methods=['GET'])
 def get_sex_year():
     try:
+        #catching values
         sex = request.args.get("sex", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
+
         data = list(db.mortalidad.find({"sexo" : sex, "anio_ocur" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
@@ -146,11 +152,13 @@ def get_sex_year():
         )
 
 #"/mortality-sex-state" GET endpoint
-@app.route('/mortality-sex-state', methods=['GET'])
+@mortalidad.route('/mortality-sex-state', methods=['GET'])
 def get_sex_state():
     try:
+        #catching values
         sex = request.args.get("sex", default=0, type=int)
         state = request.args.get("state", default=0, type=int)
+
         data = list(db.mortalidad.find({"sexo" : sex, "ent_ocurr" : state}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
@@ -167,11 +175,14 @@ def get_sex_state():
         )
 
 #"/mortality-medical-year" GET endpoint
-@app.route('/mortality-medical-year', methods=['GET'])
+@mortalidad.route('/mortality-medical-year', methods=['GET'])
 def get_medical_year():
     try:
+        #catching values
         medical = request.args.get("medical", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
+
+        #validate values
         data = list(db.mortalidad.find({"asist_medi" : medical, "anio_ocur" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
@@ -188,7 +199,7 @@ def get_medical_year():
         )
 
 #"/top-morbidity" GET endpoint
-@app.route('/top-enfermedades', methods=['GET'])
+@mortalidad.route('/top-enfermedades', methods=['GET'])
 def get_top_enfermedades():
     try:
         data = "json con top 10 enfermedades del 2012-2020"
@@ -201,103 +212,11 @@ def get_top_enfermedades():
             mimetype="application/json"
         )
 
+#endregion
 
-#auto debug on save
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-""""
-
-
-
-#"/top-morbidity-year" GET endpoint
-@app.route('/top-enfermedades-year', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json con top 10 enfermedades por año"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-
-#"/top-comorbidity" GET endpoint
-@app.route('/top-comorbidity', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json top co-morbilidaes 2012-2020"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-
-#"/mortality-top-states" GET endpoint
-@app.route('/mortality-top-states', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json Estados con mayor índice de mortalidad"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-
-#"/mortality-age-ranges" GET endpoint
-@app.route('/mortality-age-ranges', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json Mortalidad por rangos de edad"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
-        """
+#coder Class for ObjectID Type
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
