@@ -1,3 +1,4 @@
+from os import stat
 from flask import Flask, jsonify, request, Response
 import pymongo, json
 from bson import ObjectId, json_util
@@ -21,15 +22,19 @@ try:
     db = mongo.datos_abiertos_2012_2020
     mongo.server_info()#trigger exception if not able to connecto to db
 except:
-    print("ERROR - Cannot connecto to DataBase")
+    print("ERROR - Cannot connect to DataBase")
 
 #main GET endpoint
 @app.route('/main', methods=['GET'])
 def main():
     try:
-        dead = db.mortalidad.find_one()
-        firstDead = json.dumps(dead, cls=JSONEncoder)
-        return firstDead
+        dead = list(db.mortalidad.find({"anio_ocur" : 2012, "escolarida" : 2, "ent_ocurr" : 10}))
+        dead = json.dumps(dead, cls=JSONEncoder, default=json_util.default)
+        return Response(
+            response= dead,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         return Response(
             response= json.dumps({ "message" : "impossible to access /main URI" } ),
@@ -41,11 +46,14 @@ def main():
 @app.route('/mortality-state', methods=['GET'])
 def get_mortality_state():
     try:
-        year = request.args.get("state", default=0, type=int)
-        data = list(db.mortalidad.find({"ent_ocurr" : year}))
-        print(str(len(data)))
+        state = request.args.get("state", default=0, type=int)
+        data = list(db.mortalidad.find({"ent_ocurr" : state}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
-        return jsonify()
+        return Response(
+            response= data,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         print(ex)
         return Response(
@@ -62,7 +70,11 @@ def get_mortality_state_year():
         year = request.args.get("year", default=0, type=int)
         data = list(db.mortalidad.find({"ent_ocurr" : state, "anio_ocur" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
-        return jsonify()
+        return Response(
+            response= data,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         print(ex)
         return Response(
@@ -79,7 +91,11 @@ def get_scholarship_year():
         year = request.args.get("year", default=0, type=int)
         data = list(db.mortalidad.find({"anio_ocur" : year, "escolarida" : scholarship}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
-        return jsonify()
+        return Response(
+            response= data,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         print(ex)
         return Response(
@@ -96,7 +112,11 @@ def get_scholarship_state():
         state = request.args.get("state", default=0, type=int)
         data = list(db.mortalidad.find({"ent_ocurr" : state, "escolarida" : scholarship}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
-        return jsonify()
+        return Response(
+            response= data,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         print(ex)
         return Response(
@@ -113,7 +133,11 @@ def get_sex_year():
         year = request.args.get("year", default=0, type=int)
         data = list(db.mortalidad.find({"sexo" : sex, "anio_ocur" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
-        return jsonify()
+        return Response(
+            response= data,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         print(ex)
         return Response(
@@ -130,7 +154,11 @@ def get_sex_state():
         state = request.args.get("state", default=0, type=int)
         data = list(db.mortalidad.find({"sexo" : sex, "ent_ocurr" : state}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
-        return jsonify()
+        return Response(
+            response= data,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         print(ex)
         return Response(
@@ -139,22 +167,23 @@ def get_sex_state():
             mimetype="application/json"
         )
 
-#"/mortality-medical-attention" GET endpoint
-@app.route('/mortality-medical-attention', methods=['GET'])
-def get_medical_attention():
+#"/mortality-medical-year" GET endpoint
+@app.route('/mortality-medical-year', methods=['GET'])
+def get_medical_year():
     try:
         medical = request.args.get("medical", default=0, type=int)
-        print(medical)
         year = request.args.get("year", default=0, type=int)
-        print(year)
         data = list(db.mortalidad.find({"asist_medi" : medical, "anio_ocur" : year}))
-        print(len(data))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
-        return jsonify()
+        return Response(
+            response= data,
+            status= 200,
+            mimetype= "application/json"
+        )
     except Exception as ex:
         print(ex)
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-medical-attention URI" } ),
+            response= json.dumps({ "message" : "impossible to access /mortality-medical-year URI" } ),
             status=500,
             mimetype="application/json"
         )
