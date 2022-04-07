@@ -1,4 +1,3 @@
-from os import stat
 from flask import Flask, jsonify, request, Response
 import pymongo, json
 from bson import ObjectId, json_util
@@ -188,6 +187,21 @@ def get_medical_year():
             mimetype="application/json"
         )
 
+#"/top-morbidity" GET endpoint
+@app.route('/top-enfermedades', methods=['GET'])
+def get_top_enfermedades():
+    try:
+        data = "json con top 10 enfermedades del 2012-2020"
+        return data
+    except Exception as ex:
+        print(ex)
+        return Response(
+            response= json.dumps({ "message" : "cannot get users" } ),
+            status=500,
+            mimetype="application/json"
+        )
+
+
 #auto debug on save
 if __name__ == '__main__':
     app.run(debug=True)
@@ -227,19 +241,7 @@ if __name__ == '__main__':
 
 """"
 
-#"/top-morbidity" GET endpoint
-@app.route('/top-enfermedades', methods=['GET'])
-def get_top_enfermedades():
-    try:
-        data = "json con top 10 enfermedades del 2012-2020"
-        return data
-    except Exception as ex:
-        print(ex)
-        return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
-            mimetype="application/json"
-        )
+
 
 #"/top-morbidity-year" GET endpoint
 @app.route('/top-enfermedades-year', methods=['GET'])
