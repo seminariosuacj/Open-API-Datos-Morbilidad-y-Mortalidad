@@ -172,7 +172,7 @@ def get_sex_year():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-sex-year URI" } ),
+            response= json.dumps({ "message" : "impossible to access /mortaVlity-sex-year URI" } ),
             status=500,
             mimetype="application/json"
         )
