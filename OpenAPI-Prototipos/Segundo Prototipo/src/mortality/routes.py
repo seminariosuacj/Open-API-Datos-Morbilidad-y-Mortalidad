@@ -1,6 +1,4 @@
-from operator import le
-
-
+#Import of Libraries
 try:
     from flask import request, Response, Blueprint
     import pymongo, json
@@ -25,16 +23,25 @@ try:
 except:
     print("ERROR - Cannot connect to DataBase")
 
-#defining the  Blueprint
+
+
+#defining the  Blueprints for Mortality and Swagger
 mortalidad = Blueprint("mortalidad", __name__, url_prefix='/mortality/v.1')
+#swagger = Blueprint("swagger", __name__, url_prefix=SWAGGER_URL, static_url_path=API_URL)
+
+"""
+@swagger.route("/static/<path:path>")
+def send_static(path):
+    return send_from_directory('static', path)
+"""
 
 
-#region API Endpoints
+#region mortalidad API Endpoints
 #main GET endpoint
 @mortalidad.route('/main', methods=['GET'])
 def main():
     try:
-        dead = list(db.mortalidad.find({"anio_ocur" : 2012, "escolarida" : 2, "ent_ocurr" : 10}))
+        dead = list(db.mortalidad.find({"anio_regis" : 2012, "escolarida" : 2, "ent_ocurr" : 10}))
         dead = json.dumps(dead, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= dead,
@@ -43,8 +50,8 @@ def main():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /main URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -64,10 +71,9 @@ def get_mortality_state():
             mimetype= "application/json"
         )
     except Exception as ex:
-        print(ex)
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-state URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -80,7 +86,6 @@ def get_mortality_state_year():
         schema = StateYearSchema()
         errors = schema.validate(request.args)
     except ValidationError as err:
-        print(errors)
         return Response(
             response= json.dumps(err.valid_data),
             status=400,
@@ -93,7 +98,7 @@ def get_mortality_state_year():
         year = request.args.get("year", type=int)
 
         #Querying the data
-        data = list(db.mortalidad.find({"ent_ocurr" : state, "anio_ocur" : year}))
+        data = list(db.mortalidad.find({"ent_ocurr" : state, "anio_regis" : year}))
 
         #Decodify data from List to JSON
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
@@ -106,8 +111,8 @@ def get_mortality_state_year():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-state-year URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -119,7 +124,7 @@ def get_scholarship_year():
         scholarship = request.args.get("scholarship", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
 
-        data = list(db.mortalidad.find({"anio_ocur" : year, "escolarida" : scholarship}))
+        data = list(db.mortalidad.find({"anio_regis" : year, "escolarida" : scholarship}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -128,8 +133,8 @@ def get_scholarship_year():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-scholarship-year URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -150,8 +155,8 @@ def get_scholarship_state():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-scholarship-state URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -163,7 +168,7 @@ def get_sex_year():
         sex = request.args.get("sex", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
 
-        data = list(db.mortalidad.find({"sexo" : sex, "anio_ocur" : year}))
+        data = list(db.mortalidad.find({"sexo" : sex, "anio_regis" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -172,8 +177,8 @@ def get_sex_year():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortaVlity-sex-year URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -194,8 +199,8 @@ def get_sex_state():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-sex-state URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -208,7 +213,7 @@ def get_medical_year():
         year = request.args.get("year", default=0, type=int)
 
         #validate values
-        data = list(db.mortalidad.find({"asist_medi" : medical, "anio_ocur" : year}))
+        data = list(db.mortalidad.find({"asist_medi" : medical, "anio_regis" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -217,8 +222,8 @@ def get_medical_year():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-medical-year URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -237,8 +242,8 @@ def get_age_ranges():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-sex-year URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -249,7 +254,7 @@ def get_age_ranges_year():
         #catching values
         age = request.args.get("age", default=0, type=int) 
         year = request.args.get("year", default=0, type=int)
-        data = list(db.mortalidad.find({"edad_agru" : age, "anio_ocur" : year}))
+        data = list(db.mortalidad.find({"edad_agru" : age, "anio_regis" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -258,8 +263,8 @@ def get_age_ranges_year():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "impossible to access /mortality-sex-year URI" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -276,8 +281,8 @@ def get_top_morbidity():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -295,10 +300,9 @@ def get_top_morbidity_year():
             mimetype= "application/json"
         )
     except Exception as ex:
-        print(ex)
         return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -315,8 +319,8 @@ def get_top_mortality_states():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -334,8 +338,8 @@ def get_top_mortality_states_year():
         )
     except Exception as ex:
         return Response(
-            response= json.dumps({ "message" : "cannot get users" } ),
-            status=500,
+            response= json.dumps({ "message" : "Failed. Misunderstood Request." } ),
+            status=400,
             mimetype="application/json"
         )
 
@@ -356,7 +360,7 @@ def morbidity():
 #top-morbidity-year query function
 def morbidity_year(year):
     pipeline = [
-        { "$match" : {"anio_ocur" : year}},
+        { "$match" : {"anio_regis" : year}},
         { "$unwind" : "$lista_mex"},
         { "$group" : {"_id" : "$lista_mex", "count" : { "$sum" : 1} } },
         { "$sort" : SON([ ("count", -1), ("_id", -1) ]) }
@@ -383,7 +387,7 @@ def mortality_state():
 #top-mortality-states-year query function
 def mortality_state_year(year):
     pipeline = [
-        { "$match" : {"anio_ocur" : year}},
+        { "$match" : {"anio_regis" : year}},
         { "$unwind" : "$ent_ocurr"},
         { "$group" : {"_id" : "$ent_ocurr", "count" : { "$sum" : 1} } },
         { "$sort" : SON([ ("count", -1), ("_id", -1) ]) }

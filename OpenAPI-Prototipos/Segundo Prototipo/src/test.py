@@ -1,6 +1,7 @@
 import unittest
 import requests
 class ApiTest(unittest.TestCase):
+    
     API_URL = "http://127.0.0.1:5000/mortality/v.1/"
     MORT_STATE = "{}/mortality-state".format(API_URL)
     MORT_STATE_YEAR = "{}/mortality-state-year".format(API_URL)
