@@ -13,12 +13,9 @@ except Exception as e:
 
 #connection to Database
 try:
-    mongo = pymongo.MongoClient(
-        host="localhost", 
-        port=27017, 
-        serverSelectionTimeoutMS = 1000
-        )
-    db = mongo.datos_abiertos_2012_2020
+    connectionString = 'mongodb+srv://RobertM:powerrangers@openmortalitydata.clegv.mongodb.net/OpenData?retryWrites=true&w=majority' #MongoDB Atlas Connection String
+    mongo = pymongo.MongoClient(connectionString)#mongoClient instance
+    db = mongo.get_database("OpenData")#Connection to OpenData Database
     mongo.server_info()#trigger exception if not able to connect to db
 except:
     print("ERROR - Cannot connect to DataBase")
@@ -37,11 +34,11 @@ def send_static(path):
 
 
 #region mortalidad API Endpoints
-#main GET endpoint
+#main GET endpoint used for connection testing
 @mortalidad.route('/main', methods=['GET'])
 def main():
     try:
-        dead = list(db.mortalidad.find({"anio_regis" : 2012, "escolarida" : 2, "ent_ocurr" : 10}))
+        dead = list(db.mortality.find({"anio_regis" : 2012, "escolarida" : 2, "ent_ocurr" : 10})) #db mortality is the collection name in the DB
         dead = json.dumps(dead, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= dead,
@@ -63,7 +60,7 @@ def get_mortality_state():
         state = request.args.get("state", default=0, type=int)
         #state = reqArgs.validate(request.args)
 
-        data = list(db.mortalidad.find({"ent_ocurr" : state}))
+        data = list(db.mortality.find({"ent_ocurr" : state}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -98,7 +95,7 @@ def get_mortality_state_year():
         year = request.args.get("year", type=int)
 
         #Querying the data
-        data = list(db.mortalidad.find({"ent_ocurr" : state, "anio_regis" : year}))
+        data = list(db.mortality.find({"ent_ocurr" : state, "anio_regis" : year}))
 
         #Decodify data from List to JSON
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
@@ -124,7 +121,7 @@ def get_scholarship_year():
         scholarship = request.args.get("scholarship", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
 
-        data = list(db.mortalidad.find({"anio_regis" : year, "escolarida" : scholarship}))
+        data = list(db.mortality.find({"anio_regis" : year, "escolarida" : scholarship}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -146,7 +143,7 @@ def get_scholarship_state():
         scholarship = request.args.get("scholarship", default=0, type=int)
         state = request.args.get("state", default=0, type=int)
 
-        data = list(db.mortalidad.find({"ent_ocurr" : state, "escolarida" : scholarship}))
+        data = list(db.mortality.find({"ent_ocurr" : state, "escolarida" : scholarship}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -168,7 +165,7 @@ def get_sex_year():
         sex = request.args.get("sex", default=0, type=int)
         year = request.args.get("year", default=0, type=int)
 
-        data = list(db.mortalidad.find({"sexo" : sex, "anio_regis" : year}))
+        data = list(db.mortality.find({"sexo" : sex, "anio_regis" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -190,7 +187,7 @@ def get_sex_state():
         sex = request.args.get("sex", default=0, type=int)
         state = request.args.get("state", default=0, type=int)
 
-        data = list(db.mortalidad.find({"sexo" : sex, "ent_ocurr" : state}))
+        data = list(db.mortality.find({"sexo" : sex, "ent_ocurr" : state}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -213,7 +210,7 @@ def get_medical_year():
         year = request.args.get("year", default=0, type=int)
 
         #validate values
-        data = list(db.mortalidad.find({"asist_medi" : medical, "anio_regis" : year}))
+        data = list(db.mortality.find({"asist_medi" : medical, "anio_regis" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -233,7 +230,7 @@ def get_age_ranges():
     try:
         #catching values
         age = request.args.get("age", default=0, type=int)
-        data = list(db.mortalidad.find({"edad_agru" : age}))
+        data = list(db.mortality.find({"edad_agru" : age}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -254,7 +251,7 @@ def get_age_ranges_year():
         #catching values
         age = request.args.get("age", default=0, type=int) 
         year = request.args.get("year", default=0, type=int)
-        data = list(db.mortalidad.find({"edad_agru" : age, "anio_regis" : year}))
+        data = list(db.mortality.find({"edad_agru" : age, "anio_regis" : year}))
         data = json.dumps(data, cls=JSONEncoder, default=json_util.default)
         return Response(
             response= data,
@@ -353,7 +350,7 @@ def morbidity():
         { "$group" : {"_id" : "$lista_mex", "count" : { "$sum" : 1} } },
         { "$sort" : SON([ ("count", -1), ("_id", -1) ]) }
     ]
-    morb = list(db.mortalidad.aggregate(pipeline))
+    morb = list(db.mortality.aggregate(pipeline))
     top_morb = morb[:10]
     return top_morb
 
@@ -365,7 +362,7 @@ def morbidity_year(year):
         { "$group" : {"_id" : "$lista_mex", "count" : { "$sum" : 1} } },
         { "$sort" : SON([ ("count", -1), ("_id", -1) ]) }
     ]
-    morb = list(db.mortalidad.aggregate(pipeline))
+    morb = list(db.mortality.aggregate(pipeline))
     top_morb = morb[:10]
     #data = []
     #for i in top_morb:
@@ -380,7 +377,7 @@ def mortality_state():
         { "$group" : {"_id" : "$ent_ocurr", "count" : { "$sum" : 1} } },
         { "$sort" : SON([ ("count", -1), ("_id", -1) ]) }
     ]
-    morb = list(db.mortalidad.aggregate(pipeline))
+    morb = list(db.mortality.aggregate(pipeline))
     top_morb = morb[:10]
     return top_morb
 
@@ -392,7 +389,7 @@ def mortality_state_year(year):
         { "$group" : {"_id" : "$ent_ocurr", "count" : { "$sum" : 1} } },
         { "$sort" : SON([ ("count", -1), ("_id", -1) ]) }
     ]
-    morb = list(db.mortalidad.aggregate(pipeline))
+    morb = list(db.mortality.aggregate(pipeline))
     top_morb = morb[:10]
     #data = []
     #for i in top_morb:
